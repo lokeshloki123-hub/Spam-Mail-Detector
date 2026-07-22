@@ -1,140 +1,251 @@
-#   SPAM MAIL PREDICTION — Flask Web Application
-#   Run this after training: python app.py
-#   Then open: http://localhost:5000
-
-from flask import Flask, render_template, request, jsonify
+import streamlit as st
 import pickle
 import numpy as np
-import os
+# ---------------- Page Configuration ---------------- #
 
-# Create the Flask app
-app = Flask(__name__)
+st.set_page_config(
+    page_title="Spam Mail Detector",
+    page_icon="📧",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+st.markdown("""
+<style>
 
-# Load the saved model, scaler, and word columns
-# These were saved by train_model.py
+.main {
+    padding-top: 1rem;
+}
 
-print("Loading model...")
-with open('model.pkl', 'rb') as f:
-    model = pickle.load(f)
+.main-title{
+    font-size:42px;
+    font-weight:700;
+    color:#1E88E5;
+    text-align:center;
+}
 
-with open('scaler.pkl', 'rb') as f:
-    scaler = pickle.load(f)
+.sub-title{
+    font-size:18px;
+    text-align:center;
+    color:#666666;
+    margin-bottom:30px;
+}
 
-with open('columns.pkl', 'rb') as f:
-    word_columns = pickle.load(f)
+.result-box{
+    padding:20px;
+    border-radius:12px;
+    border:1px solid #DDDDDD;
+    margin-top:20px;
+}
 
-print(f"Model loaded! ({len(word_columns)} word features)")
+.footer{
+    text-align:center;
+    color:gray;
+    padding-top:30px;
+    font-size:15px;
+}
 
-# Helper Function: Convert email text → feature vector
-# The model was trained on word frequencies, not raw text.
-# So we count how many times each known word appears.
+</style>
+""", unsafe_allow_html=True)
+# ---------------------------
+# Load Model Files
+# ---------------------------
+
+@st.cache_resource
+def load_model():
+    with open("model.pkl", "rb") as f:
+        model = pickle.load(f)
+
+    with open("scaler.pkl", "rb") as f:
+        scaler = pickle.load(f)
+
+    with open("columns.pkl", "rb") as f:
+        columns = pickle.load(f)
+
+    return model, scaler, columns
+
+
+model, scaler, word_columns = load_model()
 
 def extract_features(email_text):
-    """
-    Takes raw email text and converts it to a feature vector.
-    Steps:
-      1. Clean and split the text into individual words
-      2. Count how many times each word appears
-      3. Build a row matching the 3000 training columns
-      4. Scale it using the same scaler used during training
-    """
-    # Convert to lowercase and split into words
+
     words = email_text.lower().split()
 
-    # Count word frequencies
     word_count = {}
+
     for word in words:
-        # Remove punctuation from word
-        clean_word = ''.join(c for c in word if c.isalpha())
+
+        clean_word = "".join(c for c in word if c.isalpha())
+
         if clean_word:
             word_count[clean_word] = word_count.get(clean_word, 0) + 1
 
-    # Build a feature row with 0s for all 3000 columns
     features = np.zeros(len(word_columns))
+
     for i, col in enumerate(word_columns):
+
         if col in word_count:
             features[i] = word_count[col]
 
-    # Scale using the trained scaler
-    features_scaled = scaler.transform([features])
-    return features_scaled, word_count
+    features = scaler.transform([features])
 
-# Route 1: Home Page
+    return features
+# ---------------- Sidebar ---------------- #
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+st.markdown(
+"""
+<div class='main-title'>
+📧 Spam Mail Detector
+</div>
 
-# Route 2: Prediction API
-# Called when user clicks "Check Email" button
-# Receives email text, returns spam/ham prediction + confidence
+<div class='sub-title'>
+Detect Spam Emails & SMS using Machine Learning
+</div>
+""",
+unsafe_allow_html=True
+)
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    try:
-        # Get email text from the form
-        email_text = request.json.get('email_text', '')
+st.sidebar.title("📌 Project Details")
 
-        if not email_text.strip():
-            return jsonify({'error': 'Please enter some email text.'})
+st.sidebar.markdown("---")
 
-        # Extract features from the email
-        features, word_count = extract_features(email_text)
+st.sidebar.success("Model Loaded Successfully")
 
-        # Make prediction: 0 = Ham, 1 = Spam
+st.sidebar.markdown("""
+### 🤖 Algorithm
+Best Performing Model
+(Automatically Selected)
+
+Among(Naive bayes,LogisticRegression,SVM)
+
+
+### 📊 Features
+3000 Word Features
+
+### 📂 Dataset
+SMS Spam Collection
+
+### 👨‍💻 Developer
+Lokesh
+""")
+# ---------------- Main Page ---------------- #
+
+st.title("📧 Spam Mail Detection")
+
+st.write(
+"""
+Welcome!
+
+This application predicts whether an Email or SMS is **Spam** or **Not Spam**
+using a Machine Learning model.
+"""
+)
+
+st.markdown("---")
+
+email = st.text_area(
+    "✉️ Enter your Email or SMS",
+    placeholder="Paste your email or SMS here...",
+    height=220
+)
+
+predict = st.button("🚀 Predict")
+
+if predict:
+
+    if email.strip() == "":
+        st.warning("Please enter a message.")
+
+    else:
+
+        # Feature Extraction
+        features = extract_features(email)
+
+        # Prediction
         prediction = model.predict(features)[0]
 
-        # Get confidence score (decision function distance from boundary)
-        try:
-            decision = model.decision_function(features)[0]
-            # Convert to a 0-100% confidence score
-            import math
-            confidence = round(min(99, max(60, 50 + abs(decision) * 8)), 1)
-        except:
-            confidence = 95.0
+        # -----------------------------
+        # Confidence Score
+        # -----------------------------
+        confidence = None
 
-        # Find top words that contributed to the decision
-        spam_indicator_words = ['free', 'win', 'winner', 'prize', 'click', 'offer',
-                                 'money', 'cash', 'guaranteed', 'buy', 'order',
-                                 'pills', 'online', 'urgent', 'limited', 'deal',
-                                 'discount', 'cheap', 'earn', 'income']
-        found_spam_words = [w for w in spam_indicator_words if w in word_count]
+        if hasattr(model, "predict_proba"):
+            probabilities = model.predict_proba(features)[0]
+            confidence = max(probabilities) * 100
 
-        # Build result
-        result = {
-            'prediction': int(prediction),
-            'label':      'SPAM' if prediction == 1 else 'HAM',
-            'confidence': confidence,
-            'word_count': len(email_text.split()),
-            'spam_words': found_spam_words[:5],
-        }
+        elif hasattr(model, "decision_function"):
+            score = model.decision_function(features)[0]
+            confidence = min(99.9, max(50.0, 50 + abs(score) * 10))
 
-        return jsonify(result)
+        # -----------------------------
+        # Suspicious Keywords
+        # -----------------------------
+        spam_keywords = [
+            "free", "win", "winner", "won", "claim",
+            "cash", "prize", "urgent", "offer",
+            "click", "limited", "money", "reward",
+            "gift", "bonus", "selected", "discount",
+            "loan", "credit", "buy", "order"
+        ]
 
-    except Exception as e:
-        return jsonify({'error': f'Error: {str(e)}'})
+        words = email.lower().split()
 
+        found_keywords = []
 
-# Route 3: About / Stats Page (optional info)
+        for word in words:
+            clean_word = "".join(c for c in word if c.isalpha())
 
-@app.route('/stats')
-def stats():
-    info = {
-        'model_type':    type(model).__name__,
-        'total_features': len(word_columns),
-        'dataset_size':  5172,
-        'accuracy':      '97.39%',
-        'ham_count':     3672,
-        'spam_count':    1500,
-    }
-    return jsonify(info)
+            if clean_word in spam_keywords:
+                found_keywords.append(clean_word)
 
-# Run the app
-# debug=True → shows errors in browser (turn off in production)
+        # -----------------------------
+        # Display Result
+        # -----------------------------
+        st.markdown("---")
 
-if __name__ == '__main__':
-    print("\n" + "="*45)
-    print("  Flask app running!")
-    print("  Open browser: http://localhost:5000")
-    print("="*45 + "\n")
-    app.run(debug=True)
+        if prediction == 1:
+            st.error("🚨 This message is SPAM")
+        else:
+            st.success("✅ This message is NOT SPAM")
+
+        # Confidence
+        if confidence is not None:
+            st.metric(
+                "Prediction Confidence",
+                f"{confidence:.2f}%"
+            )
+
+        # Keywords
+        if len(found_keywords) > 0:
+            st.warning("⚠️ Suspicious Keywords Found")
+
+            cols = st.columns(3)
+
+            for i, word in enumerate(found_keywords):
+                cols[i % 3].success(word)
+
+        else:
+            st.info("No suspicious keywords detected.")
+st.markdown("---")
+
+st.markdown(
+"""
+<div class='footer'>
+
+Made with ❤️ using <b>Streamlit</b>
+
+<br><br>
+
+<b>Spam Mail Detector</b>
+
+<br>
+
+Machine Learning Project
+
+<br><br>
+
+Developed by <b>Lokesh</b>
+
+</div>
+""",
+unsafe_allow_html=True
+)
