@@ -1,91 +1,52 @@
-# 📧 Spam Mail Detector using Machine Learning & NLP
+# 📧 Spam Mail Detector using Machine Learning
+
+A professional **Spam Mail Detection** web application built with **Python, Machine Learning, and Streamlit**. This project classifies Email/SMS messages as **Spam** or **Not Spam (Ham)** using Natural Language Processing (NLP) techniques and supervised machine learning algorithms.
+
+---
+
+## 🚀 Live Demo
+
+🔗 **Live Application:** YOUR_STREAMLIT_APP_URL
+
+---
 
 ## 📌 Project Overview
 
-Spam Mail Detector is a Machine Learning-based web application that automatically classifies emails as **Spam** or **Ham (Not Spam)**.
+Spam messages are a common cybersecurity and communication problem. This project applies **Natural Language Processing (NLP)** and **Machine Learning** to automatically detect whether a given email or SMS is spam.
 
-The project uses **Natural Language Processing (NLP)** techniques to analyze email text, extract meaningful features, and predict whether an email is unwanted spam or a legitimate message.
-
-A trained Machine Learning model is integrated with a **Flask web application** to provide real-time spam email predictions.
+The application provides a simple and user-friendly interface where users can paste a message and instantly receive a prediction.
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
-* ✅ Classifies emails into Spam and Ham categories
-* ✅ Text preprocessing using NLP techniques
-* ✅ Converts email text into numerical features using TF-IDF
-* ✅ Machine Learning-based prediction system
-* ✅ Flask web interface for real-time prediction
-* ✅ Lightweight and easy-to-use application
-* ✅ Ready for deployment
+- 📧 Detects Spam and Non-Spam messages
+- 🤖 Machine Learning based prediction
+- 📊 Displays prediction confidence
+- 🔍 Highlights suspicious spam keywords
+- ⚡ Fast and responsive Streamlit interface
+- 💻 Easy to deploy and use
+- 📱 Clean and professional UI
 
 ---
 
-## 🛠️ Technologies Used
+## 🛠️ Tech Stack
 
 ### Programming Language
+- Python
 
-* Python
+### Machine Learning
+- Scikit-learn
 
-### Libraries & Frameworks
+### NLP
+- NLTK
 
-* NumPy
-* Pandas
-* Scikit-learn
-* Flask
-* Gunicorn
+### Web Framework
+- Streamlit
 
-### Machine Learning & NLP
-
-* Natural Language Processing (NLP)
-* TF-IDF Vectorization
-* Supervised Machine Learning Classification
-
----
-
-## 🧠 Machine Learning Workflow
-
-```
-Data Collection
-        |
-        ↓
-Data Cleaning & Preprocessing
-        |
-        ↓
-Text Feature Extraction (TF-IDF)
-        |
-        ↓
-Model Training
-        |
-        ↓
-Model Evaluation
-        |
-        ↓
-Model Deployment using Flask
-```
-
----
-
-## 🤖 Machine Learning Model
-
-The model follows a supervised learning approach.
-
-### Steps:
-
-1. Email text data is collected
-2. Text data is cleaned and preprocessed
-3. TF-IDF converts text into numerical vectors
-4. Classification model learns patterns from training data
-5. The trained model predicts new email categories
-
-### Algorithms Used:
-
-* Multinomial Naive Bayes
-* Logistic Regression
-* Support Vector Machine (SVM)
-
-The best-performing model is saved and used for prediction.
+### Data Processing
+- NumPy
+- Pandas
 
 ---
 
@@ -94,118 +55,166 @@ The best-performing model is saved and used for prediction.
 ```
 Spam-Mail-Detector/
 │
-├── app.py                  # Flask application
-├── spam_detector.ipynb     # Model training notebook
-├── model.pkl               # Trained ML model
-├── vectorizer.pkl          # TF-IDF vectorizer
-├── requirements.txt        # Required dependencies
-├── templates/
-│   └── index.html          # Frontend HTML page
-├── static/
-│   └── style.css           # CSS styling
-│
-└── README.md               # Project documentation
+├── app.py                # Streamlit Application
+├── train_model.py        # Model Training Script
+├── model.pkl             # Trained Machine Learning Model
+├── scaler.pkl            # Feature Scaler
+├── columns.pkl           # Feature Columns
+├── emails.csv            # Dataset
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## ⚙️ Installation and Setup
+## 📊 Dataset
 
-### 1. Clone the repository
+The model is trained using an Email/SMS spam dataset containing labeled messages.
+
+Target Classes:
+
+- Spam
+- Ham (Not Spam)
+
+---
+
+## 🤖 Machine Learning Models Evaluated
+
+The following models were trained and compared:
+
+- ✅ Multinomial Naive Bayes
+- ✅ Logistic Regression
+- ✅ Support Vector Machine (SVM)
+
+The model with the **highest accuracy** was automatically selected and saved for deployment.
+
+---
+
+## ⚙️ Workflow
+
+1. Load Dataset
+2. Data Cleaning
+3. Text Preprocessing
+4. Feature Engineering
+5. Model Training
+6. Model Evaluation
+7. Select Best Model
+8. Save Trained Model
+9. Deploy using Streamlit
+
+---
+
+## ▶️ Installation
+
+### Clone Repository
 
 ```bash
 git clone https://github.com/lokeshloki123-hub/Spam-Mail-Detector.git
 ```
 
-### 2. Navigate to project directory
+### Move to Project Folder
 
 ```bash
 cd Spam-Mail-Detector
 ```
 
-### 3. Create virtual environment
-
-```bash
-python -m venv venv
-```
-
-### 4. Activate virtual environment
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Linux/Mac:
-
-```bash
-source venv/bin/activate
-```
-
-### 5. Install dependencies
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## ▶️ Run the Application
-
-Start the Flask application:
+### Run the Application
 
 ```bash
-python app.py
+streamlit run app.py
 ```
-
-Open your browser:
-
-```
-http://127.0.0.1:5000/
-```
-
-Enter an email message and click **Predict** to check whether it is Spam or Ham.
 
 ---
 
-## 📊 Model Evaluation
+## 📈 Example Prediction
 
-The model performance is evaluated using:
+### Input
 
-* Accuracy
-* Precision
-* Recall
-* F1-score
-* Confusion Matrix
+```
+Congratulations!
+
+You have won ₹50,000.
+
+Click here to claim your free reward.
+```
+
+### Output
+
+```
+🚨 Spam
+
+Confidence: 98.74%
+
+Suspicious Keywords:
+✔ Congratulations
+✔ Won
+✔ Click
+✔ Free
+✔ Reward
+```
 
 ---
 
 ## 📸 Application Preview
 
-(Add screenshots of your Flask application here)
+> Add screenshots after deployment.
 
 Example:
 
 ```
-![Spam Detector UI](static/screenshot.png)
+screenshots/home.png
+
+screenshots/result.png
 ```
 
 ---
 
-## 🔮 Future Improvements
+## 📦 Requirements
 
-* Improve accuracy using Deep Learning models
-* Implement BERT/LSTM-based email classification
-* Add email attachment scanning
-* Integrate with real email services
-* Deploy using cloud platforms
+```
+streamlit
+scikit-learn
+numpy
+pandas
+nltk
+```
+
+---
+
+## 🎯 Future Improvements
+
+- Multiple language support
+- Deep Learning models (LSTM/BERT)
+- Email attachment analysis
+- URL detection
+- Real-time Gmail integration
+- Dark mode support
 
 ---
 
 ## 👨‍💻 Author
 
-**Lokesh N**
+**Lokesh**
+
+- GitHub: https://github.com/lokeshloki123-hub
+
+---
+
+## ⭐ Support
+
+If you found this project helpful, consider giving it a ⭐ on GitHub.
+
+---
+
+## 📄 License
+
+This project is developed for educational and portfolio purposes.
 
 GitHub:
 https://github.com/lokeshloki123-hub
